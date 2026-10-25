@@ -1,0 +1,247 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>จมูกแมลงหวี่ Wiring</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column — header, wiring schematic (scrolls sideways on phones), pin map, build values, safety checks */
+:root{
+  --bg:#f3f4ef;--panel:#ffffff;--fg:#1f2418;--muted:#5d6452;--line:#d7dacd;--box:#fbfbf8;
+  --accent:#5f7a1e;--accent-bg:#e8efd4;
+  --v5:#c8372d;--v33:#c77a0a;--gnd:#6b6f63;--sda:#2563b8;--scl:#7a3fb5;--ana:#1f8a5a;--gpio:#d06a12;
+  --display:"IBM Plex Sans Thai",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14170f;--panel:#1d2117;--fg:#e7eadc;--muted:#a3a993;--line:#33392a;--box:#20251a;
+  --accent:#b6cf6a;--accent-bg:#2b3419;
+  --v5:#ef6b5f;--v33:#e9a33d;--gnd:#9a9f90;--sda:#6aa3ef;--scl:#b48be3;--ana:#4cc28b;--gpio:#f0954a;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14170f;--panel:#1d2117;--fg:#e7eadc;--muted:#a3a993;--line:#33392a;--box:#20251a;
+  --accent:#b6cf6a;--accent-bg:#2b3419;
+  --v5:#ef6b5f;--v33:#e9a33d;--gnd:#9a9f90;--sda:#6aa3ef;--scl:#b48be3;--ana:#4cc28b;--gpio:#f0954a;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--display);font-size:15px;line-height:1.6}
+.wrap{max-width:1040px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--accent)}
+h1{font-size:26px;font-weight:600;margin:0;text-wrap:balance}
+h2{font-size:18px;font-weight:600;margin:8px 0 0}
+p{margin:0}
+.sub{color:var(--muted);font-size:14px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:18px;height:3px;border-radius:2px;background:var(--c)}
+.diagram{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.diagram svg{display:block;min-width:920px;width:100%;height:auto}
+.scrollhint{font-size:12px;color:var(--muted)}
+@media (min-width:960px){.scrollhint{display:none}}
+svg text{font-family:var(--display);fill:var(--fg)}
+svg .mono{font-family:var(--mono)}
+svg .t{font-size:14px;font-weight:600}
+svg .s{font-size:12px;fill:var(--muted)}
+svg .p{font-size:12px;font-family:var(--mono)}
+svg .blk{fill:var(--box);stroke:var(--muted);stroke-width:1.2}
+svg .part{fill:var(--panel);stroke:var(--fg);stroke-width:1.2}
+svg .w{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;font-weight:500;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td code{font-family:var(--mono);font-size:13px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);margin-right:6px;vertical-align:1px}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;min-width:0}
+.note b{display:block;font-weight:600;margin-bottom:2px}
+.warn{border-color:var(--v5)}
+</style>
+<div class="wrap">
+<header>
+<div class="eyebrow">E-NOSE · ชุด A · WIRING</div>
+<h1>จมูกแมลงหวี่: ผังต่อสาย prototype</h1>
+<p class="sub">ESP32-S3 + ADS1115 + TGS2602/TGS2603 + BME688 × 2 + ปั๊มและวาล์ว ใช้ไฟ 5V จากอะแดปเตอร์ตัวเดียว GND ร่วมกันทั้งระบบ</p>
+</header>
+
+<div class="legend">
+<span style="--c:var(--v5)"><i></i>5V</span>
+<span style="--c:var(--v33)"><i></i>3.3V</span>
+<span style="--c:var(--gnd)"><i></i>GND</span>
+<span style="--c:var(--sda)"><i></i>I²C SDA</span>
+<span style="--c:var(--scl)"><i></i>I²C SCL</span>
+<span style="--c:var(--ana)"><i></i>สัญญาณแอนะล็อก</span>
+<span style="--c:var(--gpio)"><i></i>สั่งงานปั๊ม/วาล์ว</span>
+</div>
+
+<div class="diagram" role="img" aria-label="ผังต่อสาย: ESP32-S3 ต่อ I2C ไปยัง BME688 สองตัวและ ADS1115, ADS1115 อ่านค่า TGS2602 และ TGS2603 ผ่านตัวต้านทานแบ่งแรงดัน, GPIO4 และ GPIO5 สั่ง MOSFET ขับปั๊มและวาล์ว">
+<svg viewBox="0 0 1000 900" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<g id="pill5"><rect x="-17" y="-9" width="34" height="18" rx="9" fill="var(--v5)"/><text class="p" text-anchor="middle" y="4" style="fill:var(--panel);font-weight:500">5V</text></g>
+<g id="pill33"><rect x="-16" y="-9" width="32" height="18" rx="9" fill="var(--v33)"/><text class="p" text-anchor="middle" y="4" style="fill:var(--panel);font-weight:500">3V3</text></g>
+<g id="pillg"><rect x="-16" y="-9" width="32" height="18" rx="9" fill="var(--gnd)"/><text class="p" text-anchor="middle" y="4" style="fill:var(--panel);font-weight:500">GND</text></g>
+</defs>
+
+<!-- PSU -->
+<rect class="blk" x="40" y="40" width="190" height="84" rx="10"/>
+<text class="t" x="56" y="68">อะแดปเตอร์ 5V 3A</text>
+<text class="s" x="56" y="88">เลี้ยงทั้งระบบ</text>
+<text class="p" x="222" y="68" text-anchor="end">+5V</text>
+<text class="p" x="222" y="108" text-anchor="end">GND</text>
+<path class="w" d="M230 64H262" stroke="var(--v5)"/><use href="#pill5" x="280" y="64"/>
+<path class="w" d="M230 104H258" stroke="var(--gnd)"/><use href="#pillg" x="278" y="104"/>
+
+<!-- ESP32 -->
+<rect class="blk" x="40" y="170" width="190" height="300" rx="10"/>
+<text class="t" x="56" y="198">ESP32-S3</text>
+<text class="s" x="56" y="216">DevKitC-1 (มี PSRAM)</text>
+<text class="p" x="222" y="250" text-anchor="end">5V</text>
+<text class="p" x="222" y="280" text-anchor="end">GND</text>
+<text class="p" x="222" y="310" text-anchor="end">3V3</text>
+<text class="p" x="222" y="354" text-anchor="end">GPIO8 SDA</text>
+<text class="p" x="222" y="384" text-anchor="end">GPIO9 SCL</text>
+<text class="p" x="222" y="424" text-anchor="end">GPIO4 ปั๊ม</text>
+<text class="p" x="222" y="454" text-anchor="end">GPIO5 วาล์ว</text>
+<path class="w" d="M230 246H258" stroke="var(--v5)"/><use href="#pill5" x="276" y="246"/>
+<path class="w" d="M230 276H256" stroke="var(--gnd)"/><use href="#pillg" x="276" y="276"/>
+<path class="w" d="M230 306H256" stroke="var(--v33)"/><use href="#pill33" x="276" y="306"/>
+
+<!-- I2C bus -->
+<path class="w" d="M230 350H700" stroke="var(--sda)"/>
+<path class="w" d="M230 380H700" stroke="var(--scl)"/>
+
+<!-- BME688 #1 -->
+<rect class="blk" x="300" y="190" width="200" height="110" rx="10"/>
+<text class="t" x="316" y="216">BME688 #1</text>
+<text class="s" x="316" y="234">ในห้องเซนเซอร์ · 0x76</text>
+<text class="p" x="320" y="288" text-anchor="middle">VIN</text><text class="p" x="358" y="288" text-anchor="middle">GND</text><text class="p" x="396" y="288" text-anchor="middle">SDA</text><text class="p" x="434" y="288" text-anchor="middle">SCL</text><text class="p" x="472" y="288" text-anchor="middle">SDO</text>
+<path class="w" d="M320 300V316" stroke="var(--v33)"/><use href="#pill33" x="320" y="325"/>
+<path class="w" d="M358 300V316" stroke="var(--gnd)"/><use href="#pillg" x="358" y="325"/>
+<path class="w" d="M396 300V350" stroke="var(--sda)"/><circle cx="396" cy="350" r="4" fill="var(--sda)"/>
+<path class="w" d="M434 300V380" stroke="var(--scl)"/><circle cx="434" cy="380" r="4" fill="var(--scl)"/>
+<path class="w" d="M472 300V316" stroke="var(--gnd)"/><use href="#pillg" x="472" y="325"/>
+
+<!-- BME688 #2 -->
+<rect class="blk" x="540" y="190" width="200" height="110" rx="10"/>
+<text class="t" x="556" y="216">BME688 #2</text>
+<text class="s" x="556" y="234">อากาศอ้างอิง · 0x77</text>
+<text class="p" x="560" y="288" text-anchor="middle">VIN</text><text class="p" x="598" y="288" text-anchor="middle">GND</text><text class="p" x="636" y="288" text-anchor="middle">SDA</text><text class="p" x="674" y="288" text-anchor="middle">SCL</text><text class="p" x="712" y="288" text-anchor="middle">SDO</text>
+<path class="w" d="M560 300V316" stroke="var(--v33)"/><use href="#pill33" x="560" y="325"/>
+<path class="w" d="M598 300V316" stroke="var(--gnd)"/><use href="#pillg" x="598" y="325"/>
+<path class="w" d="M636 300V350" stroke="var(--sda)"/><circle cx="636" cy="350" r="4" fill="var(--sda)"/>
+<path class="w" d="M674 300V380" stroke="var(--scl)"/><circle cx="674" cy="380" r="4" fill="var(--scl)"/>
+<path class="w" d="M712 300V316" stroke="var(--v33)"/><use href="#pill33" x="712" y="325"/>
+
+<!-- ADS1115 -->
+<rect class="blk" x="300" y="430" width="200" height="120" rx="10"/>
+<text class="p" x="320" y="448" text-anchor="middle">VDD</text><text class="p" x="358" y="448" text-anchor="middle">GND</text><text class="p" x="396" y="448" text-anchor="middle">SDA</text><text class="p" x="434" y="448" text-anchor="middle">SCL</text><text class="p" x="472" y="448" text-anchor="middle">ADDR</text>
+<text class="t" x="316" y="490">ADS1115</text>
+<text class="s" x="316" y="508">ADC 16 บิต · 0x48</text>
+<text class="p" x="492" y="479" text-anchor="end">A0</text>
+<text class="p" x="492" y="519" text-anchor="end">A1</text>
+<path class="w" d="M320 430V414" stroke="var(--v33)"/><use href="#pill33" x="320" y="405"/>
+<path class="w" d="M358 430V414" stroke="var(--gnd)"/><use href="#pillg" x="358" y="405"/>
+<path class="w" d="M396 430V350" stroke="var(--sda)"/><circle cx="396" cy="350" r="4" fill="var(--sda)"/>
+<path class="w" d="M434 430V380" stroke="var(--scl)"/><circle cx="434" cy="380" r="4" fill="var(--scl)"/>
+<path class="w" d="M472 430V414" stroke="var(--gnd)"/><use href="#pillg" x="472" y="405"/>
+
+<!-- TGS2602 chain (row y=440) -->
+<use href="#pillg" x="560" y="440"/>
+<path class="w" d="M579 440H590" stroke="var(--gnd)"/>
+<rect class="part" x="590" y="432" width="50" height="16" rx="3"/><text class="p" x="615" y="425" text-anchor="middle">6.8k</text>
+<path class="w" d="M640 440H680" stroke="var(--ana)"/>
+<rect class="part" x="680" y="432" width="50" height="16" rx="3"/><text class="p" x="705" y="425" text-anchor="middle">3.9k</text>
+<path class="w" d="M730 440H770" stroke="var(--ana)"/>
+<rect class="part" x="770" y="414" width="96" height="52" rx="8" style="stroke:var(--ana)"/>
+<text class="t" x="818" y="438" text-anchor="middle">TGS2602</text><text class="s" x="818" y="456" text-anchor="middle">ขาเซนเซอร์</text>
+<path class="w" d="M866 440H900" stroke="var(--v5)"/><use href="#pill5" x="918" y="440"/>
+<text class="s" x="818" y="486" text-anchor="middle">ฮีตเตอร์: 5V ↔ GND</text>
+<path class="w" d="M500 475H660V440" stroke="var(--ana)"/><circle cx="660" cy="440" r="4" fill="var(--ana)"/>
+
+<!-- TGS2603 chain (row y=580) -->
+<use href="#pillg" x="560" y="580"/>
+<path class="w" d="M579 580H590" stroke="var(--gnd)"/>
+<rect class="part" x="590" y="572" width="50" height="16" rx="3"/><text class="p" x="615" y="565" text-anchor="middle">6.8k</text>
+<path class="w" d="M640 580H680" stroke="var(--ana)"/>
+<rect class="part" x="680" y="572" width="50" height="16" rx="3"/><text class="p" x="705" y="565" text-anchor="middle">3.9k</text>
+<path class="w" d="M730 580H770" stroke="var(--ana)"/>
+<rect class="part" x="770" y="554" width="96" height="52" rx="8" style="stroke:var(--ana)"/>
+<text class="t" x="818" y="578" text-anchor="middle">TGS2603</text><text class="s" x="818" y="596" text-anchor="middle">ขาเซนเซอร์</text>
+<path class="w" d="M866 580H900" stroke="var(--v5)"/><use href="#pill5" x="918" y="580"/>
+<text class="s" x="818" y="626" text-anchor="middle">ฮีตเตอร์: 5V ↔ GND</text>
+<path class="w" d="M500 515H660V580" stroke="var(--ana)"/><circle cx="660" cy="580" r="4" fill="var(--ana)"/>
+
+<!-- GPIO routes -->
+<path class="w" d="M230 420H260V680H300" stroke="var(--gpio)"/>
+<path class="w" d="M230 450H245V800H300" stroke="var(--gpio)"/>
+
+<!-- Pump driver (row y=680) -->
+<rect class="part" x="300" y="672" width="50" height="16" rx="3"/><text class="p" x="325" y="665" text-anchor="middle">100Ω</text>
+<path class="w" d="M350 680H410" stroke="var(--gpio)"/><circle cx="380" cy="680" r="4" fill="var(--gpio)"/>
+<path class="w" d="M380 680V700" stroke="var(--gpio)"/>
+<rect class="part" x="372" y="700" width="16" height="34" rx="3"/><text class="p" x="366" y="722" text-anchor="end">10k</text>
+<path class="w" d="M380 734V744" stroke="var(--gnd)"/><use href="#pillg" x="380" y="753"/>
+<rect class="blk" x="410" y="652" width="92" height="56" rx="8"/>
+<text class="t" x="456" y="676" text-anchor="middle">MOSFET</text><text class="s" x="456" y="694" text-anchor="middle">AO3400</text>
+<text class="p" x="416" y="670">G</text><text class="p" x="494" y="666" text-anchor="end">D</text>
+<path class="w" d="M456 708V722" stroke="var(--gnd)"/><text class="p" x="464" y="720">S</text><use href="#pillg" x="456" y="731"/>
+<path class="w" d="M502 670H566" stroke="var(--gpio)"/>
+<rect class="part" x="566" y="650" width="110" height="40" rx="8"/><text class="t" x="621" y="675" text-anchor="middle">ปั๊มลม 5V</text>
+<text class="p" x="574" y="704">−</text><text class="p" x="668" y="704" text-anchor="end">+</text>
+<path class="w" d="M676 670H700" stroke="var(--v5)"/><use href="#pill5" x="718" y="670"/>
+<rect class="part" x="566" y="610" width="110" height="24" rx="6"/><text class="p" x="621" y="626" text-anchor="middle">1N5819 ▶|</text>
+<path class="w" d="M584 634V650" stroke="var(--fg)" stroke-width="1.4"/><path class="w" d="M658 634V650" stroke="var(--fg)" stroke-width="1.4"/>
+<text class="s" x="760" y="660">C 470µF คร่อม 5V–GND</text><text class="s" x="760" y="678">ใกล้ปั๊ม</text>
+
+<!-- Valve driver (row y=800) -->
+<rect class="part" x="300" y="792" width="50" height="16" rx="3"/><text class="p" x="325" y="785" text-anchor="middle">100Ω</text>
+<path class="w" d="M350 800H410" stroke="var(--gpio)"/><circle cx="380" cy="800" r="4" fill="var(--gpio)"/>
+<path class="w" d="M380 800V820" stroke="var(--gpio)"/>
+<rect class="part" x="372" y="820" width="16" height="34" rx="3"/><text class="p" x="366" y="842" text-anchor="end">10k</text>
+<path class="w" d="M380 854V862" stroke="var(--gnd)"/><use href="#pillg" x="380" y="872"/>
+<rect class="blk" x="410" y="772" width="92" height="56" rx="8"/>
+<text class="t" x="456" y="796" text-anchor="middle">MOSFET</text><text class="s" x="456" y="814" text-anchor="middle">AO3400</text>
+<text class="p" x="416" y="790">G</text><text class="p" x="494" y="786" text-anchor="end">D</text>
+<path class="w" d="M456 828V842" stroke="var(--gnd)"/><text class="p" x="464" y="840">S</text><use href="#pillg" x="456" y="851"/>
+<path class="w" d="M502 790H566" stroke="var(--gpio)"/>
+<rect class="part" x="566" y="770" width="110" height="40" rx="8"/><text class="t" x="621" y="795" text-anchor="middle">วาล์ว 3 ทาง</text>
+<text class="p" x="574" y="824">−</text><text class="p" x="668" y="824" text-anchor="end">+</text>
+<path class="w" d="M676 790H700" stroke="var(--v5)"/><use href="#pill5" x="718" y="790"/>
+<rect class="part" x="566" y="730" width="110" height="24" rx="6"/><text class="p" x="621" y="746" text-anchor="middle">1N5819 ▶|</text>
+<path class="w" d="M584 754V770" stroke="var(--fg)" stroke-width="1.4"/><path class="w" d="M658 754V770" stroke="var(--fg)" stroke-width="1.4"/>
+<text class="s" x="760" y="780">ถ้าวาล์วเป็น 12V</text><text class="s" x="760" y="798">ใช้ไฟ 12V แยก GND ร่วม</text>
+</svg>
+</div>
+<p class="scrollhint">บนมือถือ เลื่อนไดอะแกรมซ้าย-ขวาเพื่อดูส่วนที่เหลือ</p>
+
+<h2>ตารางต่อขา</h2>
+<div class="tbl"><table>
+<thead><tr><th>จาก</th><th>ไปที่</th><th>สาย</th><th>หมายเหตุ</th></tr></thead>
+<tbody>
+<tr><td>อะแดปเตอร์ +5V</td><td>ESP32 <code>5V</code>, ฮีตเตอร์ Figaro, ขาเซนเซอร์ Figaro, ปั๊ม (+), วาล์ว (+)</td><td><span class="dot" style="--c:var(--v5)"></span>5V</td><td>อย่าดึงไฟปั๊ม/วาล์วผ่าน USB</td></tr>
+<tr><td>อะแดปเตอร์ GND</td><td>GND ทุกจุด</td><td><span class="dot" style="--c:var(--gnd)"></span>GND</td><td>GND ต้องร่วมกันทั้งระบบ ไม่งั้นค่าเพี้ยน</td></tr>
+<tr><td>ESP32 <code>3V3</code></td><td>BME688 <code>VIN</code> ×2, ADS1115 <code>VDD</code></td><td><span class="dot" style="--c:var(--v33)"></span>3.3V</td><td>ADS1115 ต้องเป็น 3.3V เพื่อคุยกับ ESP32 ได้ตรงระดับ</td></tr>
+<tr><td>ESP32 <code>GPIO8</code></td><td>SDA ของ BME688 ×2 และ ADS1115</td><td><span class="dot" style="--c:var(--sda)"></span>SDA</td><td>บัส I²C เส้นเดียวกัน</td></tr>
+<tr><td>ESP32 <code>GPIO9</code></td><td>SCL ของ BME688 ×2 และ ADS1115</td><td><span class="dot" style="--c:var(--scl)"></span>SCL</td><td>บอร์ด breakout ส่วนใหญ่มี pull-up แล้ว</td></tr>
+<tr><td>BME688 #1 <code>SDO</code></td><td>GND</td><td><span class="dot" style="--c:var(--gnd)"></span>GND</td><td>address <code>0x76</code></td></tr>
+<tr><td>BME688 #2 <code>SDO</code></td><td>3V3</td><td><span class="dot" style="--c:var(--v33)"></span>3.3V</td><td>address <code>0x77</code></td></tr>
+<tr><td>ADS1115 <code>ADDR</code></td><td>GND</td><td><span class="dot" style="--c:var(--gnd)"></span>GND</td><td>address <code>0x48</code></td></tr>
+<tr><td>จุดแบ่งแรงดัน TGS2602</td><td>ADS1115 <code>A0</code></td><td><span class="dot" style="--c:var(--ana)"></span>แอนะล็อก</td><td>ระหว่าง 3.9k กับ 6.8k</td></tr>
+<tr><td>จุดแบ่งแรงดัน TGS2603</td><td>ADS1115 <code>A1</code></td><td><span class="dot" style="--c:var(--ana)"></span>แอนะล็อก</td><td>ระหว่าง 3.9k กับ 6.8k</td></tr>
+<tr><td>ESP32 <code>GPIO4</code></td><td>100Ω → Gate MOSFET ปั๊ม</td><td><span class="dot" style="--c:var(--gpio)"></span>สั่งงาน</td><td>ใช้ PWM ปรับแรงลม</td></tr>
+<tr><td>ESP32 <code>GPIO5</code></td><td>100Ω → Gate MOSFET วาล์ว</td><td><span class="dot" style="--c:var(--gpio)"></span>สั่งงาน</td><td>HIGH = รอบดม, LOW = รอบล้าง (กำหนดในโค้ด)</td></tr>
+</tbody></table></div>
+
+<h2>ทำไมใช้ค่าเหล่านี้</h2>
+<div class="notes">
+<div class="note"><b>ตัวต้านทานโหลด 3.9k + 6.8k</b>รวมกันราว 10.7kΩ ทำหน้าที่เป็นตัวต้านทานโหลดของ Figaro และแบ่งแรงดันไปพร้อมกัน แรงดันที่จุดแบ่งสูงสุดราว 5V × 6.8/10.7 ≈ 3.2V จึงไม่เกินไฟเลี้ยง ADS1115</div>
+<div class="note"><b>คำนวณความต้านทานเซนเซอร์</b><code>V_RL = V_A0 × 10.7/6.8</code> แล้ว <code>Rs = 10.7k × (5 / V_RL − 1)</code> ใช้ค่า Rs/R0 เทียบกับตอนอากาศสะอาด</div>
+<div class="note"><b>MOSFET + 10k + 100Ω</b>AO3400 เปิดได้เต็มที่ด้วย 3.3V (logic-level) ตัว 10k ดึง Gate ลงกราวด์ให้ปั๊ม/วาล์วปิดตอนบอร์ดรีเซ็ต 100Ω ลดสัญญาณกระชากที่ขา GPIO ถ้าใช้ IRLZ44N ก็ได้</div>
+<div class="note"><b>ไดโอด 1N5819 คร่อมโหลด</b>มอเตอร์และขดลวดวาล์วสร้างไฟย้อนตอนปิด ไดโอดดูดไว้ไม่ให้ MOSFET พัง ด้านที่มีแถบต้องหันไปทาง 5V</div>
+</div>
+
+<h2>เช็กก่อนเสียบไฟ</h2>
+<div class="notes">
+<div class="note warn"><b>ตรวจขา Figaro จากดาต้าชีต</b>ขาฮีตเตอร์และขาเซนเซอร์ของ TGS2602/2603 อยู่คนละคู่ ต่อสลับกันเซนเซอร์เสียได้ ดูผังขาในดาต้าชีตของรุ่นที่ซื้อมาก่อนบัดกรี</div>
+<div class="note warn"><b>USB กับไฟนอกพร้อมกัน</b>ถ้าเสียบ USB อัปโหลดโค้ดขณะต่ออะแดปเตอร์อยู่ ให้ตรวจว่าบอร์ดมีไดโอดกันไฟย้อน ถ้าไม่แน่ใจ ถอดสาย 5V จากอะแดปเตอร์ออกก่อน</div>
+<div class="note"><b>ลองทีละส่วน</b>ต่อ I²C แล้วสแกนให้เจอ 3 address (0x48, 0x76, 0x77) ก่อน แล้วค่อยต่อ Figaro และสุดท้ายปั๊มกับวาล์ว</div>
+<div class="note"><b>กินไฟโดยประมาณ</b>ESP32 ตอนส่ง Wi-Fi ไม่กี่ร้อย mA ฮีตเตอร์ Figaro ตัวละไม่ถึง 100 mA ปั๊มและวาล์วรวมราว 0.5 A รวมแล้วอยู่ในงบอะแดปเตอร์ 3A</div>
+</div>
+</div>
+
+</body></html>
